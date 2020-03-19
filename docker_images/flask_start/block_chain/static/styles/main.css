@@ -1,0 +1,59 @@
+/* Sticky footer styles
+-------------------------------------------------- */
+html {
+  position: relative;
+  min-height: 100%;
+}
+
+body {
+  padding-top: 1px;
+  padding-bottom: 20px;
+
+  margin-bottom: 60px;
+}
+
+.footer {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding-top: 10px;
+  border-top: 1px solid #e9e9e9;
+
+  height: 60px;
+}
+
+/* Margin and padding
+-------------------------------------------------- */
+.lg-margin-bottom {
+  margin-bottom: 60px;
+}
+
+.lg-margin-top {
+  margin-top: 60px;
+}
+
+.md-margin-top {
+  margin-top: 40px;
+}
+
+.sm-margin-top {
+  margin-top: 20px;
+}
+.button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 15px 32px;
+  text-align: center;
+  text-decoration: none;
+  display: inline-block;
+  font-size: 16px;
+  margin: 4px 2px;
+  cursor: pointer;
+}
+
+.button2 {background-color: #008CBA;} /* Blue */
+.button3 {background-color: #f44336;} /* Red */ 
+.button4 {background-color: Gray; color:Black; } /* Gray */ 
+.button5 {background-color: #555555;} /* Black */
+

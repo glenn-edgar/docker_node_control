@@ -1,3 +1,8 @@
+import docker
+
+client = docker.DockerClient(base_url='tcp://127.0.0.1:1234')
+
+'''
 import time
 import json
 import redis
@@ -280,6 +285,15 @@ class System_Control(object):
 
 
 
+#
+#
+# Node controller notes
+# Heart beats
+# Self-Registration of Nodes
+#  
+#
+#
+#
 
  
   
@@ -333,4 +347,4 @@ if __name__ == "__main__":
 else:
    pass
 
-
+'''

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}"   >
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles/vendor/bootstrap.min.css') }}">
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='styles/main.css') }}">
+ 
+    <script src="{{ url_for('static', filename='scripts/vendor/jquery-3.4.1.js') }}"></script>
+   
+
+
+{% macro canvas( canvasName = "test", featuredColor = "Green", featuredMeasure = 0, qualScale1 = 0, qualScale1Color = "Black", titleText = "Step 1", maxValue = 35 ,std = "a") -%}
+			$("{{ "#"+canvasName }}").bullet({
+                                featuredColor: "{{ featuredColor }}",
+				featuredMeasure: {{ featuredMeasure }},
+				//compMeasure1: 100,
+				qualScale1: {{ qualScale1 }},
+				minValue: 0,
+				maxValue: {{ max_value }},
+                                limit_std: {{ std }},
+                                titleText: "{{ titleText }}",
+                                qualScale1Color: "{{ qualScale1Color }}"
+			})
+   
+{%- endmacro %}
+
+<style>
+input[type="range"] {
+  width: 100%;
+  margin-bottom: 3rem;
+}
+
+.auto {
+  -ms-touch-action: auto;
+  touch-action: auto;
+} 
+</style>
+
+<title>{{title}}</title>
+
+
+
+</head>
+<body>
+
+
+  
+   
+   {% include 'layouts/menu.html' %}
+   {% include 'layouts/modals.html' %}
+   {% include 'layouts/status_panel.html' %}
+   
+   
+   {% block application %}{% endblock %}
+ 
+ 
+   {% block footer %}{% endblock %} 
+
+  
+ 
+    
+   
+   
+  </body> 
+    
+      
+      <script> 
+      {% include 'layouts/js/ajax_functions.js' %}
+      {% include 'layouts/js/redis_functions.js' %}
+    
+      {% block application_javascript %}{% endblock %} 
+    </script>
+    <script  
+      src="{{ url_for('static', filename='scripts/vendor/bootstrap.bundle.min.js') }}">
+   </script> 
+  </body>
+</html>

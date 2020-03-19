@@ -1,0 +1,23 @@
+Flask
+werkzeug
+# Application server for both development and production.
+gunicorn
+
+pytest
+pytest-cov
+flake8
+
+# CLI.
+Click
+Flask-SQLAlchemy
+SQLAlchemy
+redis
+celery
+# Forms.
+Flask-WTF
+WTForms-Components
+# Extensions.
+flask-debugtoolbar
+Flask-Mail
+Flask-Login
+flask_httpauth

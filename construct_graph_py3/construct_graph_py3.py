@@ -23,7 +23,7 @@ from  graph_modules_py3.cloud_site.construct_redis_monitor_py3 import Construct_
 
 if __name__ == "__main__" :
 
-   file_handle = open("../code/system_data_files/redis_server.json",'r')
+   file_handle = open("/mnt/ssd/site_config/redis_server.json",'r')
    data = file_handle.read()
    file_handle.close()
    redis_site = json.loads(data)
@@ -43,6 +43,10 @@ if __name__ == "__main__" :
    #  Construct Master Site
    #
    #
+   
+   bc.add_header_node("Docker_Containers")
+   
+   bc.end_header_node("Docker_Containers")
    
    bc.add_header_node( "SITE","CLOUD_SITE",  properties = {"address":"21005 Paseo Montana Murrieta, Ca 92562" } )
                                                   
@@ -72,10 +76,10 @@ if __name__ == "__main__" :
    bc.end_header_node("SITE")
    bc.end_header_node("SYSTEM")
    bc.check_namespace()
-   bc.store_keys()
-   bc.extract_db()
-   bc.save_extraction("../code/system_data_files/extraction_file.pickle")
-   bc.delete_all()
+   #bc.store_keys()
+   #bc.extract_db()
+   #bc.save_extraction("../code/system_data_files/extraction_file.pickle")
+   #bc.delete_all()
    #bc.restore_extraction("extraction_file.pickle")
    #bc.delete_all()
 

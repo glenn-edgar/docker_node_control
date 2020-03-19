@@ -1,0 +1,1 @@
+from block_chain.blueprints.page.views import construct_page_blueprint
