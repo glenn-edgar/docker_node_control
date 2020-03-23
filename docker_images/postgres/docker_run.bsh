@@ -1,2 +1,0 @@
-#docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
-docker run -d --env-file env_file --restart=always --name postgres -p 5432:5432 --mount type=bind,source=/mnt/ssd/postgres,target=/var/lib/postgresql/data  postgres
