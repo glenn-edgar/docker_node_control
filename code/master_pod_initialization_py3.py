@@ -7,6 +7,13 @@ password_file   = "passwords.py"
 
 predefined_containers= {}
 predefined_containers["redis"] =["redis",'/home/pi/pod_control/code/startup_scripts/redis_run.bsh']
+predefined_containers["postgres"] =["postgres",'/home/pi/pod_control/code/startup_scripts/postgres_run.bsh']
+
+
+def start_postgres_container():
+    data = predefined_containers["postgres"]
+    docker_control.container_up(data[0],data[1])
+
 
 def start_redis_container():
     data = predefined_containers["redis"]
@@ -50,7 +57,7 @@ if "master" not in site_data:
                   
 
 if site_data["master"]:
-   
+   start_postgres_container()
    start_redis_container()
    start_utility_pod()
    run_utility_functions()
