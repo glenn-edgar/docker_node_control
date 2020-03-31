@@ -1,0 +1,4 @@
+
+#docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
+docker run -d  --network host   --name monitor_redis  --mount type=bind,source=/mnt/ssd/site_config,target=/data/ nanodatacenter/redis_monitoring  /bin/bash ./process_control.bsh
+

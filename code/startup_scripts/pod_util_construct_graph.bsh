@@ -1,0 +1,4 @@
+
+#docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
+docker run   -it --network host --rm  --name pod_utility_function  --mount type=bind,source=/mnt/ssd/site_config,target=/data/ nanodatacenter/pod_utility_function /bin/bash construct_graph.bsh
+

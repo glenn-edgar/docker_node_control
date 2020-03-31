@@ -1,0 +1,9 @@
+
+while [ 1 ]
+do
+   echo "executing process_control interface"
+   python3 process_control_py3.py 2>  /tmp/process_control_py3.err 
+   sleep 10
+
+
+done
