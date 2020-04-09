@@ -1,6 +1,6 @@
 
 #docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
-docker run -d --name ethereum_go --restart always -p 30303:30303     --mount type=bind,source=/mnt/ssd/ethereum,target=/data/     nanodatacenter/ethereum-go /bin/bash /usr/local/bin/dev_start.sh
+docker run -d --name ethereum_go --restart always -p 30303:30303     --mount type=bind,source=/mnt/ssd/ethereum,target=/data/     nanodatacenter/ethereum-go  geth --dev --datadir /data/dev_data --ipcpath /data/geth.ipc 
 
 
 

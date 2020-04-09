@@ -17,27 +17,7 @@ predefined_containers["pod_util_echo"] =["pod_utility_function",'/home/pi/pod_co
 predefined_containers["monitor_redis"] =["monitor_redis",'/home/pi/pod_control/code/startup_scripts/redis_monitoring.bsh']
 predefined_containers["ethereum"] =["ethereum_go",'/home/pi/pod_control/code/startup_scripts/ethereum_run.bsh']
 
-def start_postgres_container():
-    data = predefined_containers["postgres"]
-    docker_control.container_up(data[0],data[1])
-    
-def start_ethereum():
-    data = predefined_containers["ethereum"]
-    docker_control.container_up(data[0],data[1])
-
-def start_redis_container():
-    data = predefined_containers["redis"]
-    docker_control.container_up(data[0],data[1])
-    
-def start_utility_pod():
-    data = predefined_containers["pod_construct_graph"]
-    docker_control.container_up(data[0],data[1])
-    data = predefined_containers["pod_util_set_passwords"]
-    docker_control.container_up(data[0],data[1])   
-    data = predefined_containers["pod_util_echo"]
-    docker_control.container_up(data[0],data[1])    
-def run_utility_functions():
-    pass
+ 
     
 
 def wait_for_redis_db(site_data):
@@ -82,12 +62,10 @@ if "master" not in site_data:
                   
 
 if site_data["master"]:
-   start_ethereum()
-   start_postgres_container()
-   start_redis_container()
-   start_utility_pod()
-   run_utility_functions()
-   #start_master_pod_controller()
+    master_containers = site_data["master_containers"]
+    for i in master_containers:
+        data = predefined_containers[i]   
+        docker_control.container_up(data[0],data[1])
    
 else:
   wait_for_redis_db(site_data)
