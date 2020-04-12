@@ -16,8 +16,11 @@ predefined_containers["pod_util_set_passwords"] =["pod_utility_function",'/home/
 predefined_containers["pod_util_echo"] =["pod_utility_function",'/home/pi/pod_control/code/startup_scripts/pod_util_echo.bsh']
 predefined_containers["monitor_redis"] =["monitor_redis",'/home/pi/pod_control/code/startup_scripts/redis_monitoring.bsh']
 predefined_containers["ethereum"] =["ethereum_go",'/home/pi/pod_control/code/startup_scripts/ethereum_run.bsh']
+predefined_containers["manage_contracts"] = ["manage_contracts",'/home/pi/pod_control/code/startup_scripts/manage_contracts.bsh']
+predefined_containers["stream_events_to_log"] =["stream_events_to_log",'/home/pi/pod_control/code/startup_scripts/stream_events_to_log.bsh']
+predefined_containers["stream_events_to_cloud"] =["stream_events_to_cloud",'/home/pi/pod_control/code/startup_scripts/stream_events_to_cloud.bsh']
 
- 
+
     
 
 def wait_for_redis_db(site_data):
@@ -31,7 +34,7 @@ def wait_for_redis_db(site_data):
 
 
 
-def start_slave_pod_container(site_data):
+def start_container_applications(site_data):
    qs = Query_Support( site_data )
    query_list = []
    query_list = qs.add_match_relationship( query_list,relationship="SITE",label=site_data["site"] )
@@ -44,6 +47,27 @@ def start_slave_pod_container(site_data):
        docker_control.container_up(data[0],data[1])
 
 
+def start_site_services(site_data):
+    if 'master' in site_data:
+       if site_data["master"] == True:
+          docker_control.container_up("redis",'/home/pi/pod_control/code/startup_scripts/redis_run.bsh')
+    wait_for_redis_db(site_data)
+    qs = Query_Support( site_data )
+    query_list = []
+    query_list = qs.add_match_relationship( query_list,relationship="SITE",label=site_data["site"] )
+    query_list = qs.add_match_terminal( query_list,relationship="PROCESSOR",label=site_data["local_node"] )
+    processor_sets, processor_nodes = qs.match_list(query_list)
+    containers = processor_nodes[0]["services"]
+    print("containers",containers)
+    for i in containers:
+       data = predefined_containers[i]
+       docker_control.container_up(data[0],data[1])
+
+#
+#
+# starting point
+#
+#
 
 
 
@@ -57,21 +81,18 @@ except:
     # post appropriate error message
     raise    
 
-if "master" not in site_data:
-   status["master"] = False
-                  
 
-if site_data["master"]:
-    master_containers = site_data["master_containers"]
-    for i in master_containers:
-        data = predefined_containers[i]   
-        docker_control.container_up(data[0],data[1])
-   
-else:
-  wait_for_redis_db(site_data)
+start_site_services(site_data)
+
+start_container_applications(site_data)
+# start the runtime processes
 
 
-start_slave_pod_container(site_data)
+
+
+
+
+
 
 
 

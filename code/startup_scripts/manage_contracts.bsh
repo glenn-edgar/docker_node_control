@@ -1,0 +1,4 @@
+
+#docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
+docker run -it --rm  --network host    --mount type=bind,source=/mnt/ssd/site_config,target=/data/ --mount type=bind,source=/mnt/ssd/ethereum/,target=/ipc/  --mount type=bind,source=/mnt/ssd/ethereum/keystore/,target=/keystore/ nanodatacenter/manage_contracts  python load_contracts.py
+
