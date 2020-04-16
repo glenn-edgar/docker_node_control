@@ -10,10 +10,8 @@ password_file   = "passwords.py"
 
 predefined_containers= {}
 predefined_containers["redis"] =["redis",'/home/pi/pod_control/code/startup_scripts/redis_run.bsh']
-predefined_containers["postgres"] =["postgres",'/home/pi/pod_control/code/startup_scripts/postgres_run.bsh']
 predefined_containers["pod_construct_graph"] =["pod_utility_function",'/home/pi/pod_control/code/startup_scripts/pod_util_construct_graph.bsh']
 predefined_containers["pod_util_set_passwords"] =["pod_utility_function",'/home/pi/pod_control/code/startup_scripts/pod_util_set_passwords.bsh']
-predefined_containers["pod_util_echo"] =["pod_utility_function",'/home/pi/pod_control/code/startup_scripts/pod_util_echo.bsh']
 predefined_containers["monitor_redis"] =["monitor_redis",'/home/pi/pod_control/code/startup_scripts/redis_monitoring.bsh']
 predefined_containers["ethereum"] =["ethereum_go",'/home/pi/pod_control/code/startup_scripts/ethereum_run.bsh']
 predefined_containers["manage_contracts"] = ["manage_contracts",'/home/pi/pod_control/code/startup_scripts/manage_contracts.bsh']
@@ -83,7 +81,7 @@ except:
 
 
 start_site_services(site_data)
-
+wait_for_redis_db(site_data)
 start_container_applications(site_data)
 # start the runtime processes
 
