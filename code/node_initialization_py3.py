@@ -77,7 +77,7 @@ def start_site_services(site_data):
 #
 
 
-
+#time.sleep(15) # let docker engine get running
 docker_control = Docker_Interface()
 file_handle = open(redis_site_file,'r')
 try:    

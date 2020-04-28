@@ -1,3 +1,0 @@
-apt-get  install -y  sysstat --no-install-recommends
-python3 master_pod_initialization_py3.py
-./process_control.bsh

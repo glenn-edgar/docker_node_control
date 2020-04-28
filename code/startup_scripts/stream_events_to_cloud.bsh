@@ -1,4 +1,4 @@
 
 #docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
 
-docker run -d --name stream_events_to_cloud --restart=always --network host    --mount type=bind,source=/mnt/ssd/site_config,target=/data/  nanodatacenter/stream_events_to_cloud  /bin/bash process_control.bsh
+docker run -d --name stream_events_to_cloud   --network host    --mount type=bind,source=/mnt/ssd/site_config,target=/data/  nanodatacenter/stream_events_to_cloud  /bin/bash process_control.bsh
