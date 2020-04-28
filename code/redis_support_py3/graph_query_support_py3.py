@@ -9,10 +9,11 @@ class Query_Support(object):
    
       host = redis_site["host"]  
       port=redis_site["port"] 
-      
+      if "redis_io_db_host" not in redis_site:
+          redis_site["redis_io_db_host"] = redis_site["host"]
       
       self.redis_graph_handle  = redis.StrictRedis( host = redis_site["host"], port = redis_site["port"], db =db , decode_responses=True)
-      self.redis_data_handle = redis.StrictRedis( host = redis_site["host"] , port=redis_site["port"], db=redis_site["redis_io_db"] )
+      self.redis_data_handle = redis.StrictRedis( host = redis_site["redis_io_db_host"] , port=redis_site["port"], db=redis_site["redis_io_db"] )
       self.sep       = "["
       self.rel_sep   = ":"
       self.label_sep = "]"

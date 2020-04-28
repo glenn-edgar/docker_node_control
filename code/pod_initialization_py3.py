@@ -6,7 +6,7 @@ from redis_support_py3.graph_query_support_py3 import  Query_Support
 
 
 redis_site_file = "/mnt/ssd/site_config/redis_server.json"
-password_file   = "passwords.py"
+
 
 predefined_containers= {}
 predefined_containers["redis"] =["redis",'/home/pi/pod_control/code/startup_scripts/redis_run.bsh']
@@ -17,16 +17,25 @@ predefined_containers["ethereum"] =["ethereum_go",'/home/pi/pod_control/code/sta
 predefined_containers["manage_contracts"] = ["manage_contracts",'/home/pi/pod_control/code/startup_scripts/manage_contracts.bsh']
 predefined_containers["stream_events_to_log"] =["stream_events_to_log",'/home/pi/pod_control/code/startup_scripts/stream_events_to_log.bsh']
 predefined_containers["stream_events_to_cloud"] =["stream_events_to_cloud",'/home/pi/pod_control/code/startup_scripts/stream_events_to_cloud.bsh']
-
+predefined_containers["sqlite_server"] =["sqlite_server",'/home/pi/pod_control/code/startup_scripts/sqlite_server.bsh']
 
     
 
 def wait_for_redis_db(site_data):
+   
     while True:
         try:
             redis_handle = redis.StrictRedis( host = site_data["host"] , port=site_data["port"], db=site_data["graph_db"])
-            return
+            temp = redis_handle.ping()
+            print(temp)
+            if temp == True:
+              
+              
+               return
+            else:
+               raise
         except:
+           print("exception")
            time.sleep(10)
            pass
 

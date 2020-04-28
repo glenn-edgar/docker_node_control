@@ -37,7 +37,7 @@ from redis_support_py3.construct_data_handlers_py3 import Generate_Handlers
 
 class PI_MONITOR( object ):
 
-   def __init__( self, package_node,generate_handlers,site_node ):
+   def __init__( self, package_node,generate_handlers,site_node ,containers):
        data_structures = package_node["data_structures"]
        self.ds_handlers = {}
        self.ds_handlers["FREE_CPU"]           = generate_handlers.construct_stream_writer(data_structures["FREE_CPU"])
@@ -58,7 +58,7 @@ class PI_MONITOR( object ):
        self.ds_handlers["TCP"]        = generate_handlers.construct_stream_writer(data_structures["TCP"])  
        self.ds_handlers["UDP"]        = generate_handlers.construct_stream_writer(data_structures["UDP"])  
        self.site_node = site_node
-
+       self.containers = containers
        
        self.construct_chains()
 
@@ -126,48 +126,56 @@ class PI_MONITOR( object ):
 
    def vsz_handler( self , *args  ):
        headers = [ "USER","PID","%CPU","%MEM","VSZ","RSS","TTY","STAT","START","TIME","COMMAND", "PARAMETER1", "PARAMETER2" ]
-       f = os.popen("ps -aux | grep python")
-       data = f.read()
-       f.close()
-       lines = data.split("\n")
-       return_value = {}
-       for i in range(0,len(lines)):
+       for j in self.containers:
+            
+            f = os.popen("docker top "+j +"  -aux | grep python")
+            data = f.read()
+            f.close()
+            lines = data.split("\n")
+            return_value = {}
+            for i in range(0,len(lines)):
 
-           fields = lines[i].split()
-           temp_value = {}
-           if len(fields) <= len(headers):
-               for i in range(0,len(fields)):
-                   temp_value[headers[i]] = fields[i]
+                fields = lines[i].split()
+                
+                temp_value = {}
+                if len(fields) <= len(headers):
+                   for i in range(0,len(fields)):
+                        temp_value[headers[i]] = fields[i]
                
-               if "PARAMETER1" in temp_value:
-                   if temp_value["COMMAND"] == "python3":
-                       key = temp_value["PARAMETER1"]
-                       return_value[key] = temp_value["VSZ"]
-       
+                   if "PARAMETER1" in temp_value:
+                       if temp_value["COMMAND"] == "python":
+                           key = j+":"+temp_value["PARAMETER1"]
+                           return_value[key] = temp_value["VSZ"]
+       print("return_value",return_value)
        return return_value
        
    def rss_handler( self , *args  ):
        headers = [ "USER","PID","%CPU","%MEM","VSZ","RSS","TTY","STAT","START","TIME","COMMAND", "PARAMETER1", "PARAMETER2" ]
-       f = os.popen("ps -aux | grep python3")
-       data = f.read()
-       f.close()
-       lines = data.split("\n")
-       return_value = {}
-       for i in range(0,len(lines)):
-     
-           
-           fields = lines[i].split()
-           temp_value = {}
-           if len(fields) <= len(headers):
-               for i in range(0,len(fields)):
-                   temp_value[headers[i]] = fields[i]
-               
-               if "PARAMETER1" in temp_value:
-                   if temp_value["COMMAND"] == "python3":
-                       key = temp_value["PARAMETER1"]
-                       return_value[key] = temp_value["RSS"]
+       for j in self.containers:
        
-       return return_value
+            f = os.popen("docker top "+j +"  -aux | grep python")
+            data = f.read()
+            f.close()
+            lines = data.split("\n")
+            return_value = {}
+            for i in range(0,len(lines)):
+
+                fields = lines[i].split()
+                
+                temp_value = {}
+                if len(fields) <= len(headers):
+                   for i in range(0,len(fields)):
+                        temp_value[headers[i]] = fields[i]
+               
+                   if "PARAMETER1" in temp_value:
+                       if temp_value["COMMAND"] == "python":
+                           key = j+":"+temp_value["PARAMETER1"]
+                           return_value[key] = temp_value["RSS"]
+       print("return_value",return_value)
+       return return_value   
+   
+   
+ 
        
    def cpu_handler( self , *args  ):
        headers = [ "USER","PID","%CPU","%MEM","VSZ","RSS","TTY","STAT","START","TIME","COMMAND", "PARAMETER1", "PARAMETER2" ]
@@ -403,9 +411,19 @@ if __name__ == "__main__":
                                            
    package_sets, package_nodes = qs.match_list(query_list)  
   
+   query_list = []
+   query_list = qs.add_match_relationship( query_list,relationship="SITE",label=site_data["site"] )
+   query_list = qs.add_match_terminal( query_list,relationship="PROCESSOR",label=site_data["local_node"] )
+
+                                        
+                                        
+                                           
+   package_sets, controller_nodes = qs.match_list(query_list)
+   container_list = controller_nodes[0]["containers"]   
+  
    
    generate_handlers = Generate_Handlers(package_nodes[0],qs)
-   pi_monitor = PI_MONITOR(package_nodes[0],generate_handlers,site_data["local_node"])
+   pi_monitor = PI_MONITOR(package_nodes[0],generate_handlers,site_data["local_node"],container_list)
    
    
 else:
