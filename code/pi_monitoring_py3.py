@@ -133,7 +133,7 @@ class PI_MONITOR( object ):
             data = f.read()
             f.close()
             lines = data.split("\n")
-            return_value = {}
+           
             for i in range(0,len(lines)):
 
                 fields = lines[i].split()
