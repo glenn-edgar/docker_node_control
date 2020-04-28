@@ -126,6 +126,7 @@ class PI_MONITOR( object ):
 
    def vsz_handler( self , *args  ):
        headers = [ "USER","PID","%CPU","%MEM","VSZ","RSS","TTY","STAT","START","TIME","COMMAND", "PARAMETER1", "PARAMETER2" ]
+       return_value = {}
        for j in self.containers:
             
             f = os.popen("docker top "+j +"  -aux | grep python")
@@ -151,13 +152,14 @@ class PI_MONITOR( object ):
        
    def rss_handler( self , *args  ):
        headers = [ "USER","PID","%CPU","%MEM","VSZ","RSS","TTY","STAT","START","TIME","COMMAND", "PARAMETER1", "PARAMETER2" ]
+       return_value = {}
        for j in self.containers:
        
             f = os.popen("docker top "+j +"  -aux | grep python")
             data = f.read()
             f.close()
             lines = data.split("\n")
-            return_value = {}
+           
             for i in range(0,len(lines)):
 
                 fields = lines[i].split()
