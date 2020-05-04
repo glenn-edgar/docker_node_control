@@ -9,11 +9,18 @@ class Docker_Interface(object):
 
    def containers_ls_runing(self): # tested
        container_list = self.client.containers.list()
-       return self.look_up_containers(container_list)
+       names = []
+       for i in container_list:
+           names.append(i.name)
+       return names
        
    def containers_ls_all(self): #tested
        container_list = self.client.containers.list(all=True)
-       return self.look_up_containers(container_list)
+       names = []
+       for i in container_list:
+           names.append(i.name)
+       return names
+
        
        
    def container_start(self,container): #tested
