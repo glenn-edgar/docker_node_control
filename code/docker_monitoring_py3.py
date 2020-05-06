@@ -34,7 +34,7 @@ class Monitor_Containers(object):
            
    def check_for_allocated_containers(self):
        existing_containers = self.docker_interface.containers_ls_all()
-       print("exiting_containers",existing_containers)
+       #print("exiting_containers",existing_containers)
        for i in self.container_list:
            #print(i)
            if i not in existing_containers:
