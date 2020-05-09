@@ -4,17 +4,42 @@ from pod_control.docker_interface_py3 import Docker_Interface
 from py_cf_new_py3.chain_flow_py3 import CF_Base_Interpreter
 import json 
 import time
+import os
 
 class Monitor_Containers(object):
-   def __init__(self,processor_node, package_node, generate_handlers):
-      
+   def __init__(self,site_data):
+       self.site_data = site_data
+       self.qs =  Query_Support( site_data )
+       query_list = []
+       query_list = qs.add_match_relationship( query_list,relationship="SITE",label=site_data["site"] )
+       query_list = qs.add_match_terminal( query_list,relationship="PROCESSOR",label=site_data["local_node"] )
+       node_sets, processor_node = qs.match_list(query_list)
+   
+   
+   
+   
+       query_list = []
+       query_list = qs.add_match_relationship( query_list,relationship="SITE",label=site_data["site"] )
+       query_list = qs.add_match_relationship( query_list,relationship="PROCESSOR",label=site_data["local_node"] )
+       query_list = qs.add_match_relationship( query_list,relationship="DOCKER_MONITOR")
+       query_list = qs.add_match_terminal( query_list, 
+                                        relationship = "PACKAGE", label = "DATA_STRUCTURES" )
+                                        
+                                        
+                                           
+       package_sets, package_nodes = qs.match_list(query_list)  
+   
+       #print("package_nodes",package_nodes)
+   
+       generate_handlers = Generate_Handlers(package_nodes[0],qs)      
+       processor_node = processor_node[0]
        services = set(processor_node["services"])
        containers = set(processor_node["containers"])
-       containers = containers.union(services)
+       containers_list = containers.union(services)
        self.container_list = list(containers)     
-       print("containers",containers)       
+          
        self.docker_interface =  Docker_Interface()        
-       
+       package_node = package_nodes[0]
        data_structures = package_node["data_structures"]
        
        #print(data_structures.keys())
@@ -25,8 +50,51 @@ class Monitor_Containers(object):
        self.ds_handlers["ERROR_STATE"].delete_all()
        self.setup_environment()
        self.check_for_allocated_containers()
-
+       
+       
+       self.docker_performance_data_structures= {}
+       self.managed_containter_list = self.determine_managed_containers()
+       
+       
+       for i in self.container_list:
+           self.docker_performance_data_structures[i] = self.assemble_container_data_structures(i)
           
+
+   def determine_managed_containers(self):
+       query_list = []
+       query_list = self.qs.add_match_relationship( query_list,relationship="SITE",label=self.site_data["site"] )
+       query_list = self.qs.add_match_relationship( query_list,relationship="PROCESSOR",label=self.site_data["local_node"] )
+       query_list = self.qs.add_match_terminal( query_list,relationship="CONTAINER")
+       package_sets, manage_nodes = self.qs.match_list(query_list)
+       managed_container_list = []
+       for i in manage_nodes:
+           managed_container_list.append(i["name"])
+       return managed_container_list          
+
+   def assemble_container_data_structures(self,container_name):
+       
+       query_list = []
+       query_list = self.qs.add_match_relationship( query_list,relationship="SITE",label=self.site_data["site"] )
+       query_list = self.qs.add_match_relationship( query_list,relationship="PROCESSOR",label=self.site_data["local_node"] )
+       query_list = self.qs.add_match_relationship( query_list,relationship="CONTAINER",label=container_name)
+       query_list = self.qs.add_match_terminal( query_list, 
+                                           relationship = "PACKAGE", label = "DATA_STRUCTURES" )
+
+       package_sets, package_nodes = self.qs.match_list(query_list)  
+      
+ 
+           
+       #print("package_nodes",package_nodes)
+   
+       generate_handlers = Generate_Handlers(package_nodes[0],self.qs)
+       data_structures = package_nodes[0]["data_structures"]
+      
+       handlers = {}
+       handlers["PROCESS_VSZ"]  = generate_handlers.construct_redis_stream_writer(data_structures["PROCESS_VSZ"])
+       handlers["PROCESS_RSS"] = generate_handlers.construct_redis_stream_writer(data_structures["PROCESS_RSS"])
+       handlers["PROCESS_CPU"]  = generate_handlers.construct_redis_stream_writer(data_structures["PROCESS_CPU"])
+       return handlers
+
       
    def setup_environment(self):
         for i in self.container_list:
@@ -108,12 +176,52 @@ class Monitor_Containers(object):
        cf.insert.one_step(self.monitor)
        
        cf.insert.reset()
+       
+       cf.define_chain("process_monitor", True)
+       cf.insert.log("starting docker process measurements")
 
-
-
-
+      
+       cf.insert.one_step(self.measure_container_processes)
+       
  
-  
+       cf.insert.log("ending docker measurements")
+       cf.insert.wait_event_count( event = "MINUTE_TICK",count = 15)
+       cf.insert.reset()
+
+
+   def measure_container_processes(self,*args):
+   
+       for i in self.container_list:
+           self.measure_ps_parameter(i,"%CPU","PROCESS_CPU")
+           self.measure_ps_parameter(i,"VSZ","PROCESS_VSZ"),
+           self.measure_ps_parameter(i,"RSS","PROCESS_RSS")
+
+   def measure_ps_parameter( self , container_name,field_name,stream_name ):
+       handlers = self.docker_performance_data_structures[container_name]
+       headers = [ "USER","PID","%CPU","%MEM","VSZ","RSS","TTY","STAT","START","TIME","COMMAND", "PARAMETER1", "PARAMETER2" ]
+       f = os.popen("docker top "+container_name+ "  -aux | grep python")
+       data = f.read()
+       f.close()
+       lines = data.split("\n")
+       return_value = {}
+       for i in range(0,len(lines)):
+           fields = lines[i].split()
+           temp_value = {}
+           if len(fields) <= len(headers):
+               for i in range(0,len(fields)):
+                   temp_value[headers[i]] = fields[i]
+               
+               if "PARAMETER1" in temp_value:
+                   if temp_value["COMMAND"] == "python":
+                       key = temp_value["PARAMETER1"]
+                       return_value[key] = temp_value[field_name]
+                       
+                       
+       #print(return_value,container_name)  
+       handlers[stream_name].push( data = return_value,local_node = container_name )
+      
+ 
+
 
 if __name__ == "__main__":
    
@@ -152,7 +260,7 @@ if __name__ == "__main__":
    
    generate_handlers = Generate_Handlers(package_nodes[0],qs)
  
-   system_control = Monitor_Containers(node_processes[0],package_nodes[0],generate_handlers)
+   system_control = Monitor_Containers(site_data)
    cf = CF_Base_Interpreter()
    system_control.add_chains(cf)
    #
