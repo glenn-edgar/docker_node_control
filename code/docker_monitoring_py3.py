@@ -47,6 +47,8 @@ class Monitor_Containers(object):
        self.ds_handlers["ERROR_STREAM"]        = generate_handlers.construct_redis_stream_writer(data_structures["ERROR_STREAM"])
        self.ds_handlers["ERROR_STATE"]        = generate_handlers.construct_hash(data_structures["ERROR_HASH"])
        self.ds_handlers["WEB_COMMAND_QUEUE"]   = generate_handlers.construct_job_queue_server(data_structures["WEB_COMMAND_QUEUE"])
+       self.ds_handlers["WEB_DISPLAY_DICTIONARY"]   =  generate_handlers.construct_hash(data_structures["WEB_DISPLAY_DICTIONARY"])
+       self.ds_handlers["WEB_DISPLAY_DICTIONARY"].delete_all()
        self.ds_handlers["ERROR_STATE"].delete_all()
        self.setup_environment()
        self.check_for_allocated_containers()
@@ -98,7 +100,7 @@ class Monitor_Containers(object):
       
    def setup_environment(self):
         for i in self.container_list:
-           self.ds_handlers["ERROR_STATE"].hset(i,{"name":i,"enabled":True,"active":True,"error":False,"defined":True})
+           self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hset(i,{"name":i,"enabled":True,"active":True,"error":False,"defined":True})
            
    def check_for_allocated_containers(self):
        existing_containers = self.docker_interface.containers_ls_all()
@@ -108,56 +110,60 @@ class Monitor_Containers(object):
            if i not in existing_containers:
                print("container not found",i)
                self.ds_handlers["ERROR_STREAM"].push( data = { "container": i, "error_output" :"container not found", "time":time.time() } )
-               temp = self.ds_handlers["ERROR_STATE"].hget(i)
-               temp["defined"] = False
-               self.ds_handlers["ERROR_STATE"].hset(i,temp)
+               self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hset(i,{"name":i,"enabled":True,"active":False,"error":False,"defined":False})
+               self.ds_handlers["ERROR_STATE"].hset(i,{ "container": i, "error_output" :"container not found", "time":time.time() })
            
    
    def monitor(self,*unused):
        running_containers = self.docker_interface.containers_ls_runing()
        for i in self.container_list:
            #print(i)
-           temp = self.ds_handlers["ERROR_STATE"].hget(i)
+           temp = self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hget(i)
            if i not in running_containers:
                print("container not running",i)
                if (temp["defined"] == True) and (temp["enabled"] == True) :
                   if temp["active"] == True:
                      self.ds_handlers["ERROR_STREAM"].push( data = { "container": i, "error_output" :"container not running", "time":time.time() } )
+                     self.ds_handlers["ERROR_STATE"].hset(i,{ "container": i, "error_output" :"container not running", "time":time.time() } )
                      temp["active"] = False
-                     
+                     self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hset(i,{"name":i,"enabled":True,"active":False,"error":True,"defined":True})
                   self.docker_interface.container_start(i) # try to restart container
+           else:
+               self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hset(i,{"name":i,"enabled":True,"active":True,"error":False,"defined":True})  
            
-           else:          
-               if temp["active"] == False:
-                  temp["active"] = True
 
-           temp = self.ds_handlers["ERROR_STATE"].hget(i)              
+                
            
    def process_web_queue( self, *unused ):
        data = self.ds_handlers["WEB_COMMAND_QUEUE"].pop()
        
        if data[0] == True :
+           \
            for container,item in data[1].items():
-               temp = self.ds_handlers["ERROR_STATE"].hget(container)
+               print("container-item",container,item)
+               temp = self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hget(container)
+               print("temp",temp)
                if temp["defined"] == False:
                    continue #cannot start a nonexitant container
                try:
-                  
+                   print(temp,item)
                    if item["enabled"] == True:
-                      
+                        print("start")
                         if temp["enabled"] == False:
                            temp["enabled"] = True 
                            temp["active"] = False
-                           self.ds_handlers["ERROR_STREAM"].push( data = { "container": i, "error_output" :"container enabled for running", "time":time.time() } )
-                           self.docker_interface.container_start(i) # try to start container
+                           self.ds_handlers["ERROR_STREAM"].push( data = { "container":container, "error_output" :"container enabled for running", "time":time.time() } )
+                           self.docker_interface.container_start(container) # try to start container
                    else:
                        if temp["enabled"] == True:
+                          print("stop")
                           temp["enabled"] = False
-                          self.ds_handlers["ERROR_STREAM"].push( data = { "container": i, "error_output" :"container disabled from running", "time":time.time() } )
-                          self.docker_interface.container_stop(i)
-                   self.ds_handlers["ERROR_STATE"].hset(container,temp)
+                          self.ds_handlers["ERROR_STREAM"].push( data = { "container": container, "error_output" :"container disabled from running", "time":time.time() } )
+                          self.docker_interface.container_stop(container)
+                   print("container-temp",container,temp)
+                   self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hset(container,temp)
                except:
-                   pass
+                   raise
           
            
 
