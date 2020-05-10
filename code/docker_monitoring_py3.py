@@ -34,10 +34,14 @@ class Monitor_Containers(object):
        generate_handlers = Generate_Handlers(package_nodes[0],qs)      
        processor_node = processor_node[0]
        services = set(processor_node["services"])
+       #print(services)
        containers = set(processor_node["containers"])
-       containers_list = containers.union(services)
-       self.container_list = list(containers)     
-          
+       #print(containers)
+       containers_set = containers.union(services)
+       #print(containers_set)
+       self.container_list = list(containers_set)     
+       #print("container_list",self.container_list)
+       
        self.docker_interface =  Docker_Interface()        
        package_node = package_nodes[0]
        data_structures = package_node["data_structures"]
@@ -45,11 +49,11 @@ class Monitor_Containers(object):
        #print(data_structures.keys())
        self.ds_handlers = {}
        self.ds_handlers["ERROR_STREAM"]        = generate_handlers.construct_redis_stream_writer(data_structures["ERROR_STREAM"])
-       self.ds_handlers["ERROR_STATE"]        = generate_handlers.construct_hash(data_structures["ERROR_HASH"])
+       
        self.ds_handlers["WEB_COMMAND_QUEUE"]   = generate_handlers.construct_job_queue_server(data_structures["WEB_COMMAND_QUEUE"])
        self.ds_handlers["WEB_DISPLAY_DICTIONARY"]   =  generate_handlers.construct_hash(data_structures["WEB_DISPLAY_DICTIONARY"])
        self.ds_handlers["WEB_DISPLAY_DICTIONARY"].delete_all()
-       self.ds_handlers["ERROR_STATE"].delete_all()
+       
        self.setup_environment()
        self.check_for_allocated_containers()
        
@@ -58,7 +62,7 @@ class Monitor_Containers(object):
        self.managed_containter_list = self.determine_managed_containers()
        
        
-       for i in self.container_list:
+       for i in self.managed_containter_list:
            self.docker_performance_data_structures[i] = self.assemble_container_data_structures(i)
           
 
@@ -111,7 +115,7 @@ class Monitor_Containers(object):
                print("container not found",i)
                self.ds_handlers["ERROR_STREAM"].push( data = { "container": i, "error_output" :"container not found", "time":time.time() } )
                self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hset(i,{"name":i,"enabled":True,"active":False,"error":False,"defined":False})
-               self.ds_handlers["ERROR_STATE"].hset(i,{ "container": i, "error_output" :"container not found", "time":time.time() })
+               
            
    
    def monitor(self,*unused):
@@ -124,7 +128,7 @@ class Monitor_Containers(object):
                if (temp["defined"] == True) and (temp["enabled"] == True) :
                   if temp["active"] == True:
                      self.ds_handlers["ERROR_STREAM"].push( data = { "container": i, "error_output" :"container not running", "time":time.time() } )
-                     self.ds_handlers["ERROR_STATE"].hset(i,{ "container": i, "error_output" :"container not running", "time":time.time() } )
+                     
                      temp["active"] = False
                      self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hset(i,{"name":i,"enabled":True,"active":False,"error":True,"defined":True})
                   self.docker_interface.container_start(i) # try to restart container
@@ -138,29 +142,31 @@ class Monitor_Containers(object):
        data = self.ds_handlers["WEB_COMMAND_QUEUE"].pop()
        
        if data[0] == True :
-           \
+         
            for container,item in data[1].items():
-               print("container-item",container,item)
+               #print("container-item",container,item)
                temp = self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hget(container)
-               print("temp",temp)
+               #print("temp",temp)
                if temp["defined"] == False:
                    continue #cannot start a nonexitant container
                try:
-                   print(temp,item)
+                   #print(temp,item)
                    if item["enabled"] == True:
                         print("start")
                         if temp["enabled"] == False:
                            temp["enabled"] = True 
                            temp["active"] = False
-                           self.ds_handlers["ERROR_STREAM"].push( data = { "container":container, "error_output" :"container enabled for running", "time":time.time() } )
+                           self.ds_handlers["ERROR_STREAM"].push( data = { "container": i, "error_output" :"container  running", "time":time.time() } )
+                           self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hset(i,{ "container": i, "error_output" :"container  running", "time":time.time() } )
                            self.docker_interface.container_start(container) # try to start container
                    else:
                        if temp["enabled"] == True:
                           print("stop")
                           temp["enabled"] = False
-                          self.ds_handlers["ERROR_STREAM"].push( data = { "container": container, "error_output" :"container disabled from running", "time":time.time() } )
+                          self.ds_handlers["ERROR_STREAM"].push( data = { "container": i, "error_output" :"container not running", "time":time.time() } )
+                          self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hset(i,{ "container": i, "error_output" :"container not running", "time":time.time() } )
                           self.docker_interface.container_stop(container)
-                   print("container-temp",container,temp)
+                   #print("container-temp",container,temp)
                    self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hset(container,temp)
                except:
                    raise
@@ -178,9 +184,9 @@ class Monitor_Containers(object):
        cf.insert.reset()
        
        cf.define_chain("monitor_active_processes",True)
-       cf.insert.wait_event_count( event = "TIME_TICK",count = 30)
        cf.insert.one_step(self.monitor)
-       
+       cf.insert.wait_event_count( event = "TIME_TICK",count = 30)
+
        cf.insert.reset()
        
        cf.define_chain("process_monitor", True)
@@ -197,7 +203,7 @@ class Monitor_Containers(object):
 
    def measure_container_processes(self,*args):
    
-       for i in self.container_list:
+       for i in self.managed_containter_list:
            self.measure_ps_parameter(i,"%CPU","PROCESS_CPU")
            self.measure_ps_parameter(i,"VSZ","PROCESS_VSZ"),
            self.measure_ps_parameter(i,"RSS","PROCESS_RSS")
