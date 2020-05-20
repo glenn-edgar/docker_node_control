@@ -53,10 +53,8 @@ class PI_MONITOR( object ):
        self.ds_handlers["BLOCK_DEV"]        = generate_handlers.construct_stream_writer(data_structures["BLOCK_DEV"])  
        self.ds_handlers["CONTEXT_SWITCHES"]        = generate_handlers.construct_stream_writer(data_structures["CONTEXT_SWITCHES"])  
        self.ds_handlers["RUN_QUEUE"]        = generate_handlers.construct_stream_writer(data_structures["RUN_QUEUE"])  
-       self.ds_handlers["DEV"]        = generate_handlers.construct_stream_writer(data_structures["DEV"])  
-       self.ds_handlers["SOCK"]        = generate_handlers.construct_stream_writer(data_structures["SOCK"])  
-       self.ds_handlers["TCP"]        = generate_handlers.construct_stream_writer(data_structures["TCP"])  
-       self.ds_handlers["UDP"]        = generate_handlers.construct_stream_writer(data_structures["UDP"])  
+       self.ds_handlers["EDEV"]        = generate_handlers.construct_stream_writer(data_structures["EDEV"])  
+
        self.site_node = site_node
        self.containers = containers
        
@@ -295,21 +293,11 @@ class PI_MONITOR( object ):
         self.parse_one_line("sar -q 3 1","RUN_QUEUE")   
         return "DISABLE" 
  
-   def assemble_net_dev(self,*args):
-       self.parse_multi_line("sar -n DEV  3 1","DEV",-1)
+   def assemble_net_edev(self,*args):
+       self.parse_multi_line("sar -n EDEV  3 1","EDEV",2)
        return "DISABLE" 
 
-   def assemble_net_socket(self,*args):
-        self.parse_one_line("sar -n SOCK 3 1","SOCK")
-        return "DISABLE" 
 
-   def assemble_net_tcp(self,*args):
-        self.parse_one_line("sar -n TCP 3 1","TCP")
-        return "DISABLE" 
-        
-   def assemble_net_udp(self,*args):
-        self.parse_one_line("sar -n UDP 3 1","UDP")
-        return "DISABLE" 
 
 
    def parse_multi_line(self,sar_command,stream_key,ref_index = -1):
@@ -333,7 +321,7 @@ class PI_MONITOR( object ):
           data[key] = float(float(value))
           i = i+1
 
-       print("data",data)   
+       print("data",stream_key,data)   
        self.ds_handlers[stream_key].push(data = data,local_node = self.site_node)
 
    def parse_one_line(self, sar_command, stream_field ):
@@ -378,10 +366,7 @@ class PI_MONITOR( object ):
 
        cf.insert.one_step(self.assemble_context_switches)
        cf.insert.one_step(self.assemble_run_queue)
-       cf.insert.one_step(self.assemble_net_dev)
-       cf.insert.one_step(self.assemble_net_socket)
-       cf.insert.one_step(self.assemble_net_tcp)
-       cf.insert.one_step(self.assemble_net_udp)
+       cf.insert.one_step(self.assemble_net_edev)
        cf.insert.log("ending processor measurements")
        cf.insert.wait_event_count( event = "MINUTE_TICK",count = 15)
        cf.insert.reset()
