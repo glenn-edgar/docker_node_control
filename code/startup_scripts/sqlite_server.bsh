@@ -1,5 +1,5 @@
 
 #docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
 
-docker run    -d  --network host   --name sqlite_server    --mount type=bind,source=/mnt/ssd/site_config,target=/data/   --mount type=bind,source=/mnt/ssd/sqlite/,target=/sqlite/  nanodatacenter/sqlite_server /bin/bash process_control.bsh
+docker run    -d  --network host  --restart=always --name sqlite_server    --mount type=bind,source=/mnt/ssd/site_config,target=/data/   --mount type=bind,source=/mnt/ssd/sqlite/,target=/sqlite/  nanodatacenter/sqlite_server /bin/bash sqlite_control.bsh
 
