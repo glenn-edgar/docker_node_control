@@ -18,7 +18,7 @@ predefined_containers["manage_contracts"] = ["manage_contracts",'/home/pi/pod_co
 predefined_containers["stream_events_to_log"] =["stream_events_to_log",'/home/pi/pod_control/code/startup_scripts/stream_events_to_log.bsh']
 predefined_containers["stream_events_to_cloud"] =["stream_events_to_cloud",'/home/pi/pod_control/code/startup_scripts/stream_events_to_cloud.bsh']
 predefined_containers["sqlite_server"] =["sqlite_server",'/home/pi/pod_control/code/startup_scripts/sqlite_server.bsh']
-
+predefined_containers["op_monitor"] =["op_monitor",'/home/pi/pod_control/code/startup_scripts/op_monitor_production.bsh']
     
 
 def wait_for_redis_db(site_data):
@@ -65,7 +65,7 @@ def start_site_services(site_data):
     query_list = qs.add_match_terminal( query_list,relationship="PROCESSOR",label=site_data["local_node"] )
     processor_sets, processor_nodes = qs.match_list(query_list)
     containers = processor_nodes[0]["services"]
-    print("containers",containers)
+    print("services",containers)
     for i in containers:
        data = predefined_containers[i]
        docker_control.container_up(data[0],data[1])
