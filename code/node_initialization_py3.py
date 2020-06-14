@@ -19,8 +19,9 @@ predefined_containers["stream_events_to_log"] =["stream_events_to_log",'/home/pi
 predefined_containers["stream_events_to_cloud"] =["stream_events_to_cloud",'/home/pi/pod_control/code/startup_scripts/stream_events_to_cloud.bsh']
 predefined_containers["sqlite_server"] =["sqlite_server",'/home/pi/pod_control/code/startup_scripts/sqlite_server.bsh']
 predefined_containers["op_monitor"] =["op_monitor",'/home/pi/pod_control/code/startup_scripts/op_monitor_production.bsh']
-    
-
+predefined_containers["rpi_mosquitto"] = ["rpi_mosquitto",'/home/pi/pod_control/code/startup_scripts/rpi_mosquitto_production.bsh']    
+predefined_containers["mqtt_interface"] = ["mqtt_interface",'/home/pi/pod_control/code/startup_scripts/mqtt_interface_production.bsh']   
+ 
 def wait_for_redis_db(site_data):
    
     while True:

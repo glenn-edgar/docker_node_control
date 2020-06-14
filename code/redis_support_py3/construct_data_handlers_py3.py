@@ -43,7 +43,7 @@ class Redis_RPC_Client(object):
         self.redis_handle.delete(request["id"] )
         if data == None:
             raise ValueError("No Communication with Modbus Server")
-        response = msgpack.unpackb(data[1],encoding='utf-8')
+        response = msgpack.unpackb(data[1])
         
         return response
                 
@@ -74,7 +74,7 @@ class RPC_Server(object):
                     if self.timeout_function != None:
                         self.timeout_function()
                else:
-                   input = msgpack.unpackb(input[1],encoding='utf-8')  # 0 parameter is the queue
+                   input = msgpack.unpackb(input[1])  # 0 parameter is the queue
                    
                    self.process_message(  input )
                        
@@ -285,7 +285,7 @@ class Redis_Hash_Dictionary( object ):
       if pack_data == None:
          return None
       
-      return  msgpack.unpackb(pack_data,encoding='utf-8')
+      return  msgpack.unpackb(pack_data)
       
 
    def hgetall( self ):
@@ -337,7 +337,7 @@ class Single_Element(object):
       if pack_data == None:
          return None
       
-      return  msgpack.unpackb(pack_data,encoding='utf-8')
+      return  msgpack.unpackb(pack_data)
   
    def set( self, data ):
    
@@ -385,7 +385,7 @@ class Job_Queue_Client( object ):
          return None
       return_value = []
       for pack_data in list_data:
-        return_value.append(msgpack.unpackb(pack_data,encoding='utf-8'))
+        return_value.append(msgpack.unpackb(pack_data))
       return return_value
       
    def pop(self):
@@ -399,7 +399,7 @@ class Job_Queue_Client( object ):
           return False, None
        else:
          
-          return True,msgpack.unpackb(pack_data,encoding='utf-8')     
+          return True,msgpack.unpackb(pack_data)     
    def push(self,data):
        pack_data =  msgpack.packb(data,use_bin_type = True )
        self.redis_handle.lpush(self.key,pack_data)
@@ -453,7 +453,7 @@ class Job_Queue_Server( object ):
           return False, None
        else:
          
-          return True,msgpack.unpackb(pack_data,encoding='utf-8')
+          return True,msgpack.unpackb(pack_data)
           
    def show_next_job(self):
        pack_data = self.redis_handle.lindex(self.key, -1)
@@ -461,7 +461,7 @@ class Job_Queue_Server( object ):
           return False, None
        else:
           
-          return True, msgpack.unpackb(pack_data,encoding='utf-8')
+          return True, msgpack.unpackb(pack_data)
 
    def push_front(self,data):
        pack_data =  msgpack.packb(data,use_bin_type = True )
@@ -523,7 +523,7 @@ class Stream_List_Reader(object):
        
        for pack_data in pack_list:
           
-          data = msgpack.unpackb(pack_data,encoding='utf-8')
+          data = msgpack.unpackb(pack_data)
           return_value.append(data)
        return return_value
 
