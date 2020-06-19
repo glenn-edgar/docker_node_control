@@ -21,7 +21,7 @@ predefined_containers["sqlite_server"] =["sqlite_server",'/home/pi/pod_control/c
 predefined_containers["op_monitor"] =["op_monitor",'/home/pi/pod_control/code/startup_scripts/op_monitor_production.bsh']
 predefined_containers["rpi_mosquitto"] = ["rpi_mosquitto",'/home/pi/pod_control/code/startup_scripts/rpi_mosquitto_production.bsh']    
 predefined_containers["mqtt_interface"] = ["mqtt_interface",'/home/pi/pod_control/code/startup_scripts/mqtt_interface_production.bsh']   
- 
+predefined_containers["file_server"] = ["file_server","/home/pi/pod_control/code/startup_scripts/file_server.bsh"] 
 def wait_for_redis_db(site_data):
    
     while True:
