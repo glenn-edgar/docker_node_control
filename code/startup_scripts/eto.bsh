@@ -1,0 +1,4 @@
+#docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
+
+docker run    -d  --network host  --restart=always --name eto    --mount type=bind,source=/mnt/ssd/site_config,target=/data/   --mount type=bind,source=/mnt/ssd/files/,target=/files/  nanodatacenter/eto /bin/bash process_control.bsh
+
