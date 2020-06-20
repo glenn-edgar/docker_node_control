@@ -1,0 +1,5 @@
+#docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
+
+docker run  -d    --network host   --name irrigation_scheduling    --mount type=bind,source=/mnt/ssd/site_config,target=/data/    nanodatacenter/irrigation_scheduling /bin/bash process_control.bsh
+
+

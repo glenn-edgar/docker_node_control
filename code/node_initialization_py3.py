@@ -23,7 +23,7 @@ predefined_containers["rpi_mosquitto"] = ["rpi_mosquitto",'/home/pi/pod_control/
 predefined_containers["mqtt_interface"] = ["mqtt_interface",'/home/pi/pod_control/code/startup_scripts/mqtt_interface_production.bsh']   
 predefined_containers["file_server"] = ["file_server","/home/pi/pod_control/code/startup_scripts/file_server.bsh"] 
 predefined_containers["eto"] = ["eto","/home/pi/pod_control/code/startup_scripts/eto.bsh"]
-
+predefined_containers["irrigation_scheduling"] = ["irrigation_scheduling","/home/pi/pod_control/code/startup_scripts/irrigation_scheduling.bsh"]
 
 
 def wait_for_redis_db(site_data):
