@@ -1,0 +1,5 @@
+
+#docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
+
+
+docker run -d  --network host   --name plc_io   --mount type=bind,source=/mnt/ssd/site_config,target=/data/ nanodatacenter/plc_io  /bin/bash ./process_control.bsh

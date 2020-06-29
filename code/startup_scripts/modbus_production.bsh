@@ -1,0 +1,5 @@
+
+#docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
+
+
+docker run -d  --network host --privileged  --name modbus_server --restart=always  --mount type=bind,source=/mnt/ssd/site_config,target=/data/ nanodatacenter/modbus_server  /bin/bash ./process_control.bsh

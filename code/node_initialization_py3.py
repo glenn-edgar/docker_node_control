@@ -24,6 +24,8 @@ predefined_containers["mqtt_interface"] = ["mqtt_interface",'/home/pi/pod_contro
 predefined_containers["file_server"] = ["file_server","/home/pi/pod_control/code/startup_scripts/file_server.bsh"] 
 predefined_containers["eto"] = ["eto","/home/pi/pod_control/code/startup_scripts/eto.bsh"]
 predefined_containers["irrigation_scheduling"] = ["irrigation_scheduling","/home/pi/pod_control/code/startup_scripts/irrigation_scheduling.bsh"]
+predefined_containers["plc_io"] = ["plc_io","/home/pi/pod_control/code/startup_scripts/plc_io_production.bsh"]
+predefined_containers["modbus_server"] = ["modbus_server","/home/pi/pod_control/code/startup_scripts/modbus_production.bsh"]
 
 
 def wait_for_redis_db(site_data):
