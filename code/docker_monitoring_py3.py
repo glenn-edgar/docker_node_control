@@ -14,7 +14,22 @@ class Monitor_Containers(object):
        query_list = qs.add_match_relationship( query_list,relationship="SITE",label=site_data["site"] )
        query_list = qs.add_match_terminal( query_list,relationship="PROCESSOR",label=site_data["local_node"] )
        node_sets, processor_node = qs.match_list(query_list)
-   
+       print(processor_node[0])
+       print("containers ",processor_node[0]["containers"])
+       print("services",processor_node[0]["services"])
+       self.reboot_dictionary = {}
+       self.reboot_dictionary["pod"]  =  "https://github.com/glenn-edgar/docker_node_control.git"
+       self.reboot_dictionary["graph"] = "nanodatacenter/pod_utility_function"
+       self.reboot_dictionary
+       services = {}
+       
+       
+       self.reboot_dictionary["services"] = services
+       
+       
+       containers = {}
+       
+       self.reboot_dictionary["containers"] = containers
    
    
    
@@ -52,8 +67,9 @@ class Monitor_Containers(object):
        
        self.ds_handlers["WEB_COMMAND_QUEUE"]   = generate_handlers.construct_job_queue_server(data_structures["WEB_COMMAND_QUEUE"])
        self.ds_handlers["WEB_DISPLAY_DICTIONARY"]   =  generate_handlers.construct_hash(data_structures["WEB_DISPLAY_DICTIONARY"])
+       self.ds_handlers["REBOOT_DATA"]              = generate_handlers.construct_hash(data_structures["REBOOT_DATA"])
        self.ds_handlers["WEB_DISPLAY_DICTIONARY"].delete_all()
-       
+       self.ds_handlers["REBOOT_DATA"].hset("REBOOT_FLAG","") # clearing reboot flagdo
        self.setup_environment()
        self.check_for_allocated_containers()
        
@@ -64,7 +80,16 @@ class Monitor_Containers(object):
        
        for i in self.managed_containter_list:
            self.docker_performance_data_structures[i] = self.assemble_container_data_structures(i)
-          
+           
+
+   def monitor_upgrade_command(self,*unsused):
+       temp = self.ds_handlers["REBOOT_DATA"].hget("REBOOT_FLAG")
+       print("temp",temp)
+       if temp != None:
+          if temp == "REBOOT":
+             self.ds_handlers["REBOOT_DATA"].hset("REBOOT_FLAG","")
+             # find docker images.
+             os.system("reboot")          
 
    def determine_managed_containers(self):
        query_list = []
@@ -179,7 +204,11 @@ class Monitor_Containers(object):
       
    def add_chains(self,cf):
 
-
+       cf.define_chain("monitor_upgrade_command", True)
+       cf.insert.wait_event_count( event = "TIME_TICK", count = 1)
+       cf.insert.one_step(self.monitor_upgrade_command)
+       cf.insert.reset()
+       
        cf.define_chain("monitor_web_command_queue", True)
        cf.insert.wait_event_count( event = "TIME_TICK", count = 1)
        cf.insert.one_step(self.process_web_queue)

@@ -1,0 +1,235 @@
+Kubernetes is an application orchestrator.
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 5). leanpub.com. Kindle Edition
+
+What is an orchestrator An orchestrator is a system that deploys and manages applications.
+It can deploy your applications and dynamically respond to changes. For example, 
+Kubernetes can: 
+deploy your application 
+scale it up and down dynamically according to demand 
+self-heal it when things break 
+perform zero-downtime rolling updates and rollbacks and more
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 5). leanpub.com. Kindle Edition. . 
+
+What is a containerised app A containerized application is an app that runs in a container. 
+Before we had containers, applications ran on physical servers or in virtual machines. 
+Containers are the next iteration of how we package and run our apps, and they’re faster, more lightweight, 
+and more suited to modern business requirements than servers and virtual machines. 
+Think of it this way: 
+Applications ran on physical servers in the age of open-system (roughly the 1980s and 1990s)
+Applications ran in virtual machines in the age of virtual machines (2000s and into the 2010s)
+ Applications run in containers in the cloud-native era (now) 
+ While Kubernetes can orchestrate other workload types, including virtual machines and serverless functions, 
+ it’s most commonly used to orchestrate containerised apps. What is a cloud-native app 
+ A cloud-native application is an application that is designed to meet modern business demands (auto-scaling, self-healing, rolling updates etc.) 
+ and can run on Kubernetes. I feel like it’s important to be clear that cloud-native apps are not applications that will only run on a public cloud. 
+ Yes, they absolutely can run on a public cloud, but they can run anywhere that you have Kubernetes – even your on-premises data center. 
+ What is a microservices app A microservices app is a business application that is built from lots of small specialised parts 
+ that communicate and form a meaningful application. For example, you might have an e-commerce app that comprises all of 
+ the following small specialised components: web front-end catalog service shopping cart authentication service logging service persistent store more… 
+ Each of these individual services is called a microservice.
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (pp. 5-6). leanpub.com. Kindle Edition. 
+
+The Container Runtime Interface (CRI)
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 8). leanpub.com. Kindle Edition. 
+
+kubernetes -- master and slaves pg 14
+
+API Server -- all communication goes throught this facility
+
+It exposes a RESTful API that you POST YAML configuration files to over HTTPS. 
+These YAML files, which we sometimes call manifests, contain the desired state of your application. 
+This desired state includes things like; which container image to use, which ports to expose, and how many Pod replicas to run.
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 16). leanpub.com. Kindle Edition. 
+
+
+Definition of YAML  https://en.wikipedia.org/wiki/YAML
+It uses both Python-style indentation to indicate nesting, and a more compact format that uses [...] for lists and {...} for maps[1] making 
+YAML 1.2 a superset of JSON.[2]
+
+YAML offers an "in-line" style for denoting associative arrays and lists. Here is a sample of the components.
+
+Conventional block format uses a hyphen+space to begin a new item in list.
+
+--- # Favorite movies
+- Casablanca
+- North by Northwest
+- The Man Who Wasn't There
+Optional inline format is delimited by comma+space and enclosed in brackets (similar to JSON).[16]
+
+--- # Shopping list
+[milk, pumpkin pie, eggs, juice]
+Keys are separated from values by a colon+space. Indented blocks, common in YAML data files,
+ use indentation and new lines to separate the key/value pairs. Inline Blocks, 
+ common in YAML data streams, use comma+space to separate the key/value pairs between braces.
+ 
+ Two features that distinguish YAML from the capabilities of other data-serialization languages are structures[17] and data typing.
+
+YAML structures enable storage of multiple documents within a single file, usage of references for repeated nodes, and usage of arbitrary nodes as keys.[17]
+
+For clarity, compactness, and avoiding data entry errors, YAML provides node anchors (using &) and references (using *). References to the anchor work for all data types (see the ship-to reference in the example below).
+
+Below is an example of a queue in an instrument sequencer in which two steps are reused repeatedly without being fully described each time.
+
+--- # Sequencer protocols for Laser eye surgery
+- step:  &id001                  # defines anchor label &id001
+    instrument:      Lasik 2000
+    pulseEnergy:     5.4
+    pulseDuration:   12
+    repetition:      1000
+    spotSize:        1mm
+
+- step: &id002
+    instrument:      Lasik 2000
+    pulseEnergy:     5.0
+    pulseDuration:   10
+    repetition:      500
+    spotSize:        2mm
+- step: *id001                   # refers to the first step (with anchor &id001)
+- step: *id002                   # refers to the second step
+- step: *id002
+
+-- # Sequencer protocols for Laser eye surgery
+- step:  &id001                  # defines anchor label &id001
+    instrument:      Lasik 2000
+    pulseEnergy:     5.4
+    pulseDuration:   12
+    repetition:      1000
+    spotSize:        1mm
+
+- step: &id002
+    instrument:      Lasik 2000
+    pulseEnergy:     5.0
+    pulseDuration:   10
+    repetition:      500
+    spotSize:        2mm
+- step: *id001                   # refers to the first step (with anchor &id001)
+- step: *id002                   # refers to the second step
+- step: *id002
+
+ Data-structure hierarchy is maintained by outline indentation.
+
+---
+receipt:     Oz-Ware Purchase Invoice
+date:        2012-08-06
+customer:
+    first_name:   Dorothy
+    family_name:  Gale
+
+items:
+    - part_no:   A4786
+      descrip:   Water Bucket (Filled)
+      price:     1.47
+      quantity:  4
+
+    - part_no:   E1628
+      descrip:   High Heeled "Ruby" Slippers
+      size:      8
+      price:     133.7
+      quantity:  1
+
+bill-to:  &id001
+    street: |
+            123 Tornado Alley
+            Suite 16
+    city:   East Centerville
+    state:  KS
+
+ship-to:  *id001
+
+specialDelivery:  >
+    Follow the Yellow Brick
+    Road to the Emerald City.
+    Pay no attention to the
+    man behind the curtain.
+...
+Criticism
+YAML has been criticized for its significant whitespace, confusing features, insecure defaults, and its complex and ambiguous specification:[28][32][33]
+
+Configuration files can execute commands or load contents without the users realizing it.[28]
+Editing large YAML files is difficult as indentation errors can go unnoticed.[28]
+Type autodetection is a source of errors. For example, unquoted Yes and NO are converted to booleans, software version numbers might be converted to floats.[28][34]
+Truncated files are often interpreted as valid YAML due to the absence of terminators.
+The complexity of the standard led to inconsistent implementations and making the language non-portable.[28][35]
+The perceived flaws and complexity of YAML has lead to appearance of StrictYAML, which uses a restricted subset of the YAML specification.[34] 
+
+Back to Kubernetes
+
+The cluster store is currently based on etcd, a popular distributed database. As it’s the single source of truth for the cluster, you should run between 3-5 etcd replicas for high-availability, and you should provide adequate ways to recover when things go wrong.
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 16). leanpub.com. Kindle Edition. 
+
+The controller manager
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 16). leanpub.com. Kindle Edition. 
+
+Kubelet The Kubelet is the star of the show on every node. It’s the main Kubernetes agent, and it runs on every node in the cluster. In fact, it’s common to use the terms node and kubelet interchangeably.
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (pp. 18-19). leanpub.com. Kindle Edition.
+
+ Kubernetes DNS As well as the various control plane and node components, every Kubernetes cluster has an internal DNS service that is vital to operations.
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 19). leanpub.com. Kindle Edition. 
+In Kubernetes, the declarative model works like this: Declare the desired state of an application (microservice) in a manifest file POST it to the API server Kubernetes stores it in the cluster store as the application’s desired state  Kubernetes implements the desired state on the cluster Kubernetes implements watch loops to make sure the current state of the application doesn’t vary from the desired state
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (pp. 20-21). leanpub.com. Kindle Edition. 
+Once you’ve created the manifest, you POST it to the API server. The most common way of doing this is with the kubectl command-line utility. This sends the manifest to the control plane as an HTTP POST, usually on port 443.
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 21). leanpub.com. Kindle Edition. 
+
+
+The point I’m making is that Pods are unreliable, which poses a challenge… Assume you’ve got a microservices app with a bunch of Pods performing video rendering. How will this work if other parts of the app that need to use the rendering service cannot rely on the rendering Pods being there when they need them? This is where Services come in to play. Services provide reliable networking for a set of Pods. Figure 2.12 shows the uploader microservice talking to the renderer microservice via a Kubernetes Service object. The Kubernetes Service is providing a reliable name and IP, and is load-balancing requests to the two renderer Pods behind it.
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 25). leanpub.com. Kindle Edition. 
+
+Docker Desktop
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 33). leanpub.com. Kindle Edition. 
+
+kubectl is the main Kubernetes command-line tool and is what you will use for your day-to-day Kubernetes management activities. It might be useful to think of kubectl as SSH for Kubernetes. It’s available for Linux, Mac and Windows.
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 36). leanpub.com. Kindle Edition.
+
+Configuration Map.
+ConfigMaps are first-class objects in the Kubernetes API under the core API group, and they’re v1. This tells us a lot of things:
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 117). leanpub.com. Kindle Edition. 
+Behind the scenes, ConfigMaps are a map of key/value pairs and we call each key/value pair an entry.
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 118). leanpub.com. Kindle Edition. 
+
+Once data is stored in a ConfigMap, it can be injected into containers at run-time via any of the following methods: environment variables arguments to the container’s startup command files in a volume
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 118). leanpub.com. Kindle Edition. 
+
+kind: ConfigMap 
+apiVersion: v1 
+metadata:
+  name: test-conf
+data:
+  test.conf: |
+    env = plex-test
+    endpoint = 0.0.0.0:31001
+    char = utf8
+    vault = PLEX/test
+    log-size = 512M
+ The previous YAML file inserts a pipe character (|) after the name of the entry’s key property. This tells Kubernetes that everything following the pipe is to be treated as a single literal value. Therefore, the ConfigMap object is called test-config and it contains a single map entry as follows:
+
+Poulton, Nigel. The Kubernetes Book: Updated Feb 2020 (p. 122). leanpub.com. Kindle Edition. 
+
+
+
+
+
+ 
+
+
+
+
+
+
+

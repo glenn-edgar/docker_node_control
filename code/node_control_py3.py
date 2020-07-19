@@ -151,7 +151,7 @@ class System_Control(object):
        self.ds_handlers["WEB_COMMAND_QUEUE"]   = generate_handlers.construct_job_queue_server(data_structures["WEB_COMMAND_QUEUE"])
        
        self.ds_handlers["WEB_DISPLAY_DICTIONARY"]   =  generate_handlers.construct_hash(data_structures["WEB_DISPLAY_DICTIONARY"])
- 
+
        self.startup_list = []
        self.process_hash = {}
        keys = self.ds_handlers["WEB_DISPLAY_DICTIONARY"].hkeys()
@@ -292,7 +292,7 @@ if __name__ == "__main__":
     # Read Boot File
     # expand json file
     # 
-   #time.sleep(20) # wait for mqtt server get started
+   #time.sleep(20) # wait for redis server get started
    file_handle = open("/mnt/ssd/site_config/redis_server.json")
    data = file_handle.read()
    file_handle.close()

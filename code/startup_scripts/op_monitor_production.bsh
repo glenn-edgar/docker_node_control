@@ -2,4 +2,4 @@
 #docker run [OPTIONS] IMAGE[:TAG|@DIGEST] [COMMAND] [ARG...]
 
 
-docker run -d  --network host   --name op_monitor --restart=always  --mount type=bind,source=/mnt/ssd/site_config,target=/data/ nanodatacenter/op_monitor  /bin/bash ./process_control.bsh
+docker run -d  --network host   --name op_monitor  --mount type=bind,source=/mnt/ssd/site_config,target=/data/ nanodatacenter/op_monitor  /bin/bash ./process_control.bsh
