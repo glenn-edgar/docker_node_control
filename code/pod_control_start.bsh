@@ -1,5 +1,6 @@
-exit
+
 cd /home/pi/pod_control/code
+python3 node_upgrade_py3.py
 python3 node_initialization_py3.py
 while [ 1 ]
 do

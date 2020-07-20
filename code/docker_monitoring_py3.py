@@ -84,7 +84,7 @@ class Monitor_Containers(object):
 
    def monitor_upgrade_command(self,*unsused):
        temp = self.ds_handlers["REBOOT_DATA"].hget("REBOOT_FLAG")
-       print("temp",temp)
+       #print("temp",temp)
        if temp != None:
           if temp == "REBOOT":
              self.ds_handlers["REBOOT_DATA"].hset("REBOOT_FLAG","")

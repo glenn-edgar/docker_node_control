@@ -13,9 +13,30 @@ reboot_file = "/mnt/ssd/site_config/reboot_file.json"
 container_run_script = "docker run -d   --name redis -p 6379:6379 --mount type=bind,source=/mnt/ssd/redis,target=/data  " 
 container_run_script = container_run_script + " --mount type=bind,source=/mnt/ssd/redis/config/redis.conf,target=/usr/local/etc/redis/redis.conf redis"
 
-
+def down_load_any_upgrades():
+   
+   try:
+        file_handle = open(reboot_file,'r')   
+        data = file_handle.read()
+        file_handle.close()
+        upgrade_handler(json.loads(data))
+        
+   except:
+       pass
+       
+   os.system("rm "+reboot_file) # remove reboot flag
     
  
+def upgrade_handler(input_message):
+    
+   
+    if input_message['graph'][0] == True:
+        os.system("docker pull "+input_message['graph'][1])
+        os.system(input_message['graph'][2])
+    
+  
+ 
+    
 
  
  
@@ -147,7 +168,7 @@ if 'master' in site_data:
       docker_control.container_up("redis",container_run_script) 
       
 wait_for_redis_db(site_data)
-
+down_load_any_upgrades()
 start_site_services(site_data)
 verify_services(site_data)
 

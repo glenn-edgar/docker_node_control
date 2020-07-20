@@ -1,8 +1,7 @@
-import redis
+
 import json
 import time
 import os
-from pod_control.docker_interface_py3 import Docker_Interface
 
 
 
@@ -28,15 +27,12 @@ def down_load_any_upgrades():
  
 def upgrade_handler(input_message):
     
-    """
-    if input_message['pod'] == True:
-       input_message['pod'] = [True,'https://github.com/glenn-edgar/docker_node_control.git']
-    """
-    if input_message['graph'][0] == True:
-       os.system("docker pull "+input_message['graph'][1])
-       os.system(input_message["graph"][2])
+   
+    if input_message['pod'][0] == True:
+       os.system("./upgrade_pod_control.bsh")
       
-
+     
+ 
     services = input_message["services"]
     for i in services:
        print("service "+i)
@@ -60,7 +56,7 @@ reload_data = down_load_any_upgrades()
 upgrade_handler(reload_data)
 
 
-#os.system("rm "+reboot_file) # remove reboot flag
+
 
 
 

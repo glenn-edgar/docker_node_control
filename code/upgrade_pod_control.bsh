@@ -1,2 +1,2 @@
-cd ../../
-git clone https://github.com/glenn-edgar/docker_node_control.git
+cd ../
+./git_pull
