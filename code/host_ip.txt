@@ -1,0 +1,28 @@
+list of nodes
+
+
+Lacima Site
+192.168.1.110 wired
+192.168.1.111 wifi
+
+Well monitor pi 4
+192.168.1.115 wired
+192.168.1.116 wifi
+192.168.1.117 external wifi
+
+
+Cloud Site
+192.168.1.51 wired
+192.168.1.52 wifi
+
+vpn site
+192.168.1.51 wired
+192.168.1.52 wifi
+
+
+Current Irrigation Site
+192.168.1.227
+
+My Desktop pi
+192.168.1.25 wifi
+192.168.1.26 lan
