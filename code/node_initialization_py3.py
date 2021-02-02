@@ -2,44 +2,9 @@ import redis
 import json
 import time
 import os
-from pod_control.docker_interface_py3 import Docker_Interface
+from docker_control.docker_interface_py3 import Docker_Interface
 from redis_support_py3.graph_query_support_py3 import  Query_Support
-
-
 redis_site_file = "/mnt/ssd/site_config/redis_server.json"
-reboot_file = "/mnt/ssd/site_config/reboot_file.json"
-
-
-container_run_script = "docker run -d   --name redis -p 6379:6379 --mount type=bind,source=/mnt/ssd/redis,target=/data  " 
-container_run_script = container_run_script + " --mount type=bind,source=/mnt/ssd/redis/config/redis.conf,target=/usr/local/etc/redis/redis.conf redis"
-
-def down_load_any_upgrades():
-   
-   try:
-        file_handle = open(reboot_file,'r')   
-        data = file_handle.read()
-        file_handle.close()
-        upgrade_handler(json.loads(data))
-        
-   except:
-       pass
-       
-   os.system("rm "+reboot_file) # remove reboot flag
-    
- 
-def upgrade_handler(input_message):
-    
-   
-    if input_message['graph'][0] == True:
-        os.system("docker pull "+input_message['graph'][1])
-        os.system(input_message['graph'][2])
-    
-  
- 
-    
-
- 
- 
 
 def wait_for_redis_db(site_data):
    
@@ -78,7 +43,9 @@ def start_container_applications(site_data):
    query_list = qs.add_match_terminal( query_list,relationship="PROCESSOR",label=site_data["local_node"] )
    processor_sets, processor_nodes = qs.match_list(query_list)
    containers = processor_nodes[0]["containers"]
+   
    print("containers",containers)
+  
    for i in containers:
        starting_script = find_container_scripts(qs,i)
        docker_control.container_up(i,starting_script)
@@ -104,7 +71,7 @@ def start_site_services(site_data):
     query_list = qs.add_match_terminal( query_list,relationship="PROCESSOR",label=site_data["local_node"] )
     processor_sets, processor_nodes = qs.match_list(query_list)
     services = processor_nodes[0]["services"]
-    print("services",services)
+    
    
     for i in services:
        if i == "redis":
@@ -123,7 +90,7 @@ def verify_services(site_data):
     #print("services",services)
     for i in services:
        check = docker_control.get(i)
-       #print(i,check)
+      
        if check == None:
           raise ValueError("container "+i+" is not define")
 
@@ -163,12 +130,10 @@ except:
     # post appropriate error message
     raise    
 
-if 'master' in site_data:
-   if site_data["master"] == True:
-      docker_control.container_up("redis",container_run_script) 
+
       
 wait_for_redis_db(site_data)
-down_load_any_upgrades()
+
 start_site_services(site_data)
 verify_services(site_data)
 

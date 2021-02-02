@@ -2,7 +2,7 @@ import redis
 import time
 import msgpack
 
-class Redis_Stream(object):
+class Redis_Stream_Utilities(object):
    def __init__(self,redis_handle, exact_flag = False):
        self.redis_handle = redis_handle
        if exact_flag == True:
@@ -10,10 +10,13 @@ class Redis_Stream(object):
        else:
           self.add_pad = "~"
           
-   
+ 
+   def trim(self,key,length):
+       length = int(length)
+       #print("key",key,length)
+       self.redis_handle.execute_command("XTRIM",key,'MAXLEN','~', length)
+ 
    def xadd(self,key,max_len=100,id="*",data_dict = {} ):
-       
-
        return self.redis_handle.execute_command("XADD",key,'MAXLEN','~', max_len, id, "data",data_dict["data"])
        
        
@@ -45,16 +48,18 @@ class Redis_Stream(object):
       
        return_value = []
        for i in temp:
+         
           return_item= {}
+          i = list(i)
           i[0] = i[0].decode()
           ids = i[0].split("-")
           
           return_item["id"] = i[0]
           return_item["timestamp"] = float(ids[0])/1000.
           return_item["sub_id"] = int(ids[1])
-          packed_data = i[1][1]
+          packed_data = i[1][b'data']
 
-          return_item["data"] = msgpack.unpackb(packed_data,encoding='utf-8')
+          return_item["data"] = msgpack.unpackb(packed_data)
           return_value.append(return_item)
       
        return return_value

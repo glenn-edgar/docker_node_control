@@ -1,4 +1,3 @@
-exit
 cd /home/pi/nod_control/code
 
 python3 node_initialization_py3.py

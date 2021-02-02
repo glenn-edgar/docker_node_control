@@ -1,8 +1,9 @@
-import base64
+
+import time
 import redis
 import msgpack
 import json
-from .redis_stream_utilities_py3 import Redis_Stream
+from .redis_stream_utilities_py3 import Redis_Stream_Utilities
 
 class Job_Queue_Client( object ):
  
@@ -15,7 +16,7 @@ class Job_Queue_Client( object ):
 
   
    def push(self,data):
-       pack_data =  msgpack.packb(data,use_bin_type = True )
+       pack_data =  msgpack.packb(data )
        self.redis_handle.lpush(self.key,pack_data)
        self.redis_handle.ltrim(self.key,0,self.depth)
 
@@ -57,11 +58,13 @@ class Cloud_TX_Handler(object):
      
 
 
-   def send_log(self,meta_data,input_data,local_node = None):
+   def send_log(self,meta_data,key,input_data,local_node = None):
        data = {}
        data["local_node"] = local_node
        data["site"] = self.site
        data["name"]  = meta_data["name"]
+       data["key"] = key
+       data["time_stamp"] = time.time()
        data["data"] = input_data
        #print("data",data)
        self.forward_queue.push(data)
@@ -73,10 +76,10 @@ class Cloud_TX_Handler(object):
 
 
    def check_forwarding(self,meta_data):  # do not forward data structures unless specified in the "forward" field
-       
+       #print("check_forwarding")
        if  "forward" in meta_data:
            if meta_data["forward"] == True:
-             
+              #print("return True")
               return True
        #print("return false")
        return False
@@ -103,7 +106,7 @@ class Cloud_TX_Handler(object):
        
    def stream_write(self,meta_data, key, data,local_node = None ) :
        if self.check_forwarding(meta_data):
-          self.send_log(meta_data,data,local_node)
+          self.send_log(meta_data,key,data,local_node)
        
        
        
@@ -125,7 +128,7 @@ class Cloud_RX_Handler(object):
       self.data_handlers["RPOP"] = self.rpop
       self.data_handlers["STREAM_WRITE"] = self.stream_write
       self.data_handlers["STREAM_LIST_WRITE"] = self.stream_list_write
-      self.redis_stream =  Redis_Stream(redis_handle, exact_flag = False)
+      self.redis_stream =  Redis_Stream_Utilities(redis_handle, exact_flag = False)
       self.file_path = {}
       self.file_path["APP"] =  "app_data_files/"
       self.file_path["SYS"] =  "system_data_files/"

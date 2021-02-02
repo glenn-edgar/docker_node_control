@@ -37,7 +37,7 @@ from redis_support_py3.construct_data_handlers_py3 import Generate_Handlers
 
 class PI_MONITOR( object ):
 
-   def __init__( self, package_node,generate_handlers,site_node ,containers):
+   def __init__( self, package_node,generate_handlers,site_node ):
        data_structures = package_node["data_structures"]
        self.ds_handlers = {}
        self.ds_handlers["FREE_CPU"]           = generate_handlers.construct_stream_writer(data_structures["FREE_CPU"])
@@ -56,9 +56,59 @@ class PI_MONITOR( object ):
        self.ds_handlers["EDEV"]        = generate_handlers.construct_stream_writer(data_structures["EDEV"])  
 
        self.site_node = site_node
-       self.containers = containers
+      
        
        self.construct_chains()
+
+
+   def measure_free_cpu( self,*args):
+       headers = [ "Time","cpu","%user" , "%nice", "%system", "%iowait" ,"%steal" ,"%idle" ]
+       return_value = {}
+       f = os.popen("sar -u 60 1 ")
+       data = f.readlines()
+       f.close()
+       print("data",data)
+       fields = data[-1].split()
+       for i in range(2,len(fields)):
+           return_value[headers[i]] = float(fields[i])
+       
+       return return_value
+
+   def assemble_free_cpu( self, *args ):
+       data = self.measure_free_cpu()
+       
+       self.ds_handlers["FREE_CPU"].push(data = data,local_node = self.site_node)
+       
+       return "DISABLE"
+
+   def proc_memory( self, *args ):
+       f = os.popen("cat /proc/meminfo ")
+       
+       data_list = f.readlines()
+       f.close()
+       return_value = {}
+       for i in data_list:
+          items = i.split(":")
+          key = items[0].strip()
+          values = items[1].split("kB")
+          return_value[key] = values[0].strip()
+       
+       return return_value
+
+
+   def assemble_ram( self, *args ):
+       memory_dict = self.proc_memory()
+
+       self.ds_handlers["RAM"].push( data = memory_dict,local_node = self.site_node)
+       
+       return "DISABLE"
+
+   def assemble_temperature( self, *args):
+       temp_f = self.measure_temperature()
+       print("temp_f",temp_f)
+       self.ds_handlers["TEMPERATURE"].push(data = {"TEMP_F":temp_f},local_node = self.site_node)
+       
+       return "DISABLE"
 
    def measure_temperature( self, *args ):
       temp = os.popen("vcgencmd measure_temp").readline()
@@ -68,8 +118,66 @@ class PI_MONITOR( object ):
       temp = (9.0/5.0*temp)+32.
 
       return temp
+      
+   def extract_key(self, data_key ):
+      headers = [ "USER","PID","%CPU","%MEM","VSZ","RSS","TTY","STAT","START","TIME","COMMAND" ,"PARAMETER1"]
+      return_value = {}
+      
+       
+      f = os.popen("ps -aux | grep python3")
+      data = f.read()
+      f.close()
+      #print('data',data)
+     
+      lines = data.split("\n") 
+          
+      for i in range(0,len(lines)):
+         
+          fields = lines[i].split()   
+          
+                   
+          temp_value = {}
+          
+          if len(fields) >= len(headers):
+             for i in range(0,len(headers)):
+                 
+                 temp_value[headers[i]] = fields[i]
+             
+             if "PARAMETER1" in temp_value:
+                   if temp_value["COMMAND"] == "python3":
+                           key = temp_value["PARAMETER1"]
+                           return_value[key] = temp_value[data_key]
+      
+      return return_value
+   
+      
+
+   
+   def assemble_vsz(self,*args):
+       data = self.extract_key("VSZ")
+       print("data",data)
+   
+       self.ds_handlers["PROCESS_VSZ"].push( data =  data,local_node = self.site_node )
+       return "DISABLE"
 
 
+       
+   def assemble_rss(self,*args):
+       data = self.extract_key("RSS")
+       print("data",data)
+
+       self.ds_handlers["PROCESS_RSS"].push( data = data,local_node = self.site_node )
+       return "DISABLE"
+
+
+       
+   def assemble_cpu_handler(self,*args):
+       data = self.extract_key("%CPU")
+       print("data",data)
+       
+       self.ds_handlers["PROCESS_CPU"].push( data = data,local_node = self.site_node )
+       return "DISABLE"
+       
    def measure_disk_space( self, *args ):
        f = os.popen("df")
        data = f.read()
@@ -88,182 +196,7 @@ class PI_MONITOR( object ):
               return_value[str(fields[0])] = percent
        return return_value
 
-   def measure_processor_ram( self , *args ):
-       f = os.popen("free -l")
-       data = f.readlines()
-       f.close()
-       return data
-
-   def measure_processor_load( self , *args  ):
-       headers = [ "USER","PID","%CPU","%MEM","VSZ","RSS","TTY","STAT","START","TIME","COMMAND", "PARAMETER1", "PARAMETER2" ]
-       f = os.popen("ps -aux | grep python")
-       data = f.read()
-       f.close()
-       lines = data.split("\n")
-   
-       for i in range(0,len(lines)):
-
-           fields = lines[i].split()
-           temp_value = {}
-           if len(fields) <= len(headers):
-               for i in range(0,len(fields)):
-                   temp_value[headers[i]] = fields[i]
-               
-               if "PARAMETER1" in temp_value:
-                 if temp_value["COMMAND"] == "python3":
-                    temp_dict = {}
-                    temp_dict["python_process"] = temp_value["PARAMETER1"]
-                    temp_dict["pid"]            = temp_value["PID"]
-                    temp_dict["RSS"]            = temp_value["RSS"]
-                    temp_dict["VSZ"]            = temp_value["VSZ"]
-                    temp_dict["%CPU"]           = temp_value["%CPU"]
-                    
-                    self.ds_handlers["PROCESS_STATE"].push(data = temp_dict,local_node = self.site_node)
-
        
-
-   def vsz_handler( self , *args  ):
-       headers = [ "USER","PID","%CPU","%MEM","VSZ","RSS","TTY","STAT","START","TIME","COMMAND", "PARAMETER1", "PARAMETER2" ]
-       return_value = {}
-       for j in self.containers:
-            
-            f = os.popen("docker top "+j +"  -aux | grep python")
-            data = f.read()
-            f.close()
-            lines = data.split("\n")
-           
-            for i in range(0,len(lines)):
-
-                fields = lines[i].split()
-                
-                temp_value = {}
-                if len(fields) <= len(headers):
-                   for i in range(0,len(fields)):
-                        temp_value[headers[i]] = fields[i]
-               
-                   if "PARAMETER1" in temp_value:
-                       if temp_value["COMMAND"] == "python":
-                           key = j+":"+temp_value["PARAMETER1"]
-                           return_value[key] = temp_value["VSZ"]
-       print("return_value",return_value)
-       return return_value
-       
-   def rss_handler( self , *args  ):
-       headers = [ "USER","PID","%CPU","%MEM","VSZ","RSS","TTY","STAT","START","TIME","COMMAND", "PARAMETER1", "PARAMETER2" ]
-       return_value = {}
-       for j in self.containers:
-       
-            f = os.popen("docker top "+j +"  -aux | grep python")
-            data = f.read()
-            f.close()
-            lines = data.split("\n")
-           
-            for i in range(0,len(lines)):
-
-                fields = lines[i].split()
-                
-                temp_value = {}
-                if len(fields) <= len(headers):
-                   for i in range(0,len(fields)):
-                        temp_value[headers[i]] = fields[i]
-               
-                   if "PARAMETER1" in temp_value:
-                       if temp_value["COMMAND"] == "python":
-                           key = j+":"+temp_value["PARAMETER1"]
-                           return_value[key] = temp_value["RSS"]
-       print("return_value",return_value)
-       return return_value   
-   
-   
- 
-       
-   def cpu_handler( self , *args  ):
-       headers = [ "USER","PID","%CPU","%MEM","VSZ","RSS","TTY","STAT","START","TIME","COMMAND", "PARAMETER1", "PARAMETER2" ]
-       f = os.popen("ps -aux | grep python3")
-       data = f.read()
-       f.close()
-       lines = data.split("\n")
-       return_value = {}
-       for i in range(0,len(lines)):
-     
-           
-           fields = lines[i].split()
-           temp_value = {}
-           if len(fields) <= len(headers):
-               for i in range(0,len(fields)):
-                   temp_value[headers[i]] = fields[i]
-               
-               if "PARAMETER1" in temp_value:
-                   if temp_value["COMMAND"] == "python3":
-                       key = temp_value["PARAMETER1"]
-                       return_value[key] = temp_value["%CPU"]
-       
-       return return_value
-
-   def measure_free_cpu( self,*args):
-       headers = [ "Time","cpu","%user" , "%nice", "%system", "%iowait" ,"%steal" ,"%idle" ]
-       return_value = {}
-       f = os.popen("sar -u 60 1 ")
-       data = f.readlines()
-       f.close()
-       print("data",data)
-       fields = data[-1].split()
-       for i in range(2,len(fields)):
-           return_value[headers[i]] = float(fields[i])
-       
-       return return_value
-
-   def proc_memory( self, *args ):
-       f = os.popen("cat /proc/meminfo ")
-       
-       data_list = f.readlines()
-       f.close()
-       return_value = {}
-       for i in data_list:
-          items = i.split(":")
-          key = items[0].strip()
-          values = items[1].split("kB")
-          return_value[key] = values[0].strip()
-       
-       return return_value
-       
-  
-   def assemble_free_cpu( self, *args ):
-       data = self.measure_free_cpu()
-       self.ds_handlers["FREE_CPU"].push(data = data,local_node = self.site_node)
-       
-       return "DISABLE"
- 
-   def assemble_ram( self, *args ):
-       memory_dict = self.proc_memory()
-       self.ds_handlers["RAM"].push( data = memory_dict,local_node = self.site_node)
-       
-       return "DISABLE"
-       
-       
-   def assemble_temperature( self, *args):
-       temp_f = self.measure_temperature()
-       print("temp_f",temp_f)
-       self.ds_handlers["TEMPERATURE"].push(data = {"TEMP_F":temp_f},local_node = self.site_node)
-       
-       return "DISABLE"
-
-       
-   def assemble_vsz(self,*args):
-       data = self.vsz_handler()
-       self.ds_handlers["PROCESS_VSZ"].push( data =  data,local_node = self.site_node )
-       return "DISABLE"
-       
-   def assemble_rss(self,*args):
-       data = self.rss_handler()
-       self.ds_handlers["PROCESS_RSS"].push( data = data,local_node = self.site_node )
-       return "DISABLE"
-       
-   def assemble_cpu_handler(self,*args):
-       data = self.cpu_handler()
-       self.ds_handlers["PROCESS_CPU"].push( data = data,local_node = self.site_node )
-       return "DISABLE"
-      
    def assemble_disk_space(self,*args):
       data = self.measure_disk_space()     
       self.ds_handlers["DISK_SPACE"].push(data = data,local_node = self.site_node)
@@ -296,7 +229,6 @@ class PI_MONITOR( object ):
    def assemble_net_edev(self,*args):
        self.parse_multi_line("sar -n EDEV  3 1","EDEV",2)
        return "DISABLE" 
-
 
 
 
@@ -346,6 +278,9 @@ class PI_MONITOR( object ):
           
         self.ds_handlers[stream_field].push(data = data,local_node = self.site_node)
  
+ 
+
+
    def construct_chains(self,*args):
 
        cf = CF_Base_Interpreter()
@@ -368,11 +303,11 @@ class PI_MONITOR( object ):
        cf.insert.one_step(self.assemble_run_queue)
        cf.insert.one_step(self.assemble_net_edev)
        cf.insert.log("ending processor measurements")
-       cf.insert.wait_event_count( event = "MINUTE_TICK",count = 15)
+       cf.insert.wait_event_count( event = "MINUTE_TICK",count = 5)
        cf.insert.reset()
        cf.execute()
-        
-    
+
+
 if __name__ == "__main__":
    
    
@@ -391,29 +326,25 @@ if __name__ == "__main__":
    query_list = []
    query_list = qs.add_match_relationship( query_list,relationship="SITE",label=site_data["site"] )
    query_list = qs.add_match_relationship( query_list,relationship="PROCESSOR",label=site_data["local_node"] )
+   query_list = qs.add_match_relationship( query_list,relationship="NODE_SYSTEM")
    query_list = qs.add_match_terminal( query_list, 
-                                        relationship = "PACKAGE", label = "SYSTEM_MONITORING" )
+                                        relationship = "PACKAGE", label = "PROCESSOR_MONITORING" )
                                         
                                         
                                            
    package_sets, package_nodes = qs.match_list(query_list)  
   
    query_list = []
-   query_list = qs.add_match_relationship( query_list,relationship="SITE",label=site_data["site"] )
-   query_list = qs.add_match_terminal( query_list,relationship="PROCESSOR",label=site_data["local_node"] )
-
-                                        
-                                        
-                                           
-   package_sets, controller_nodes = qs.match_list(query_list)
-   container_list = controller_nodes[0]["containers"]   
+  
   
    
    generate_handlers = Generate_Handlers(package_nodes[0],qs)
-   pi_monitor = PI_MONITOR(package_nodes[0],generate_handlers,site_data["local_node"],container_list)
+   pi_monitor = PI_MONITOR(package_nodes[0],generate_handlers,site_data["local_node"])
    
    
 else:
    pass
+
+
 
 
